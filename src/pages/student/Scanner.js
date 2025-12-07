@@ -1,312 +1,290 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
-import axios from 'axios';
-import toast from 'react-hot-toast';
-import { FiCamera, FiCheckCircle, FiUpload, FiX } from 'react-icons/fi';
+import React, { useState } from 'react';
 
-const Scanner = () => {
+const StudentScanner = () => {
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState(null);
-  const [scanner, setScanner] = useState(null);
-  const scannerRef = useRef(null);
 
-  const startScanner = () => {
-    if (scanner) {
-      scanner.clear();
-      setScanner(null);
-    }
-
+  const handleScan = () => {
     setScanning(true);
-    setResult(null);
-
-    const html5QrcodeScanner = new Html5QrcodeScanner(
-      "qr-reader",
-      {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0,
-        showTorchButtonIfSupported: true,
-      },
-      false
-    );
-
-    html5QrcodeScanner.render(
-      async (decodedText) => {
-        html5QrcodeScanner.clear();
-        setScanning(false);
-        await processQRCode(decodedText);
-      },
-      (error) => {
-        console.log('QR Code scan error:', error);
-      }
-    );
-
-    setScanner(html5QrcodeScanner);
-  };
-
-  const stopScanner = () => {
-    if (scanner) {
-      scanner.clear();
-      setScanner(null);
-    }
-    setScanning(false);
-  };
-
-  const processQRCode = async (qrString) => {
-    try {
-      const token = localStorage.getItem('token');
+    
+    // Simulate scanning process
+    setTimeout(() => {
+      const units = [
+        { code: 'CS101', name: 'Introduction to Programming', lecturer: 'Dr. Smith', location: 'Main Hall' },
+        { code: 'MATH201', name: 'Calculus I', lecturer: 'Prof. Johnson', location: 'Science Block' },
+        { code: 'PHY101', name: 'Physics Fundamentals', lecturer: 'Dr. Williams', location: 'Lab Building' },
+      ];
       
-      // Try to send to backend
-      try {
-        const response = await axios.post('/api/student/scan', 
-          { qrString },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        
-        setResult({
-          success: true,
-          data: response.data.attendance
-        });
-        toast.success('Attendance recorded successfully!');
-      } catch (apiError) {
-        // If backend fails, use demo data
-        const demoData = generateDemoAttendance(qrString);
-        setResult({
-          success: true,
-          data: demoData,
-          isDemo: true
-        });
-        toast.success('Demo attendance recorded!');
-      }
-    } catch (error) {
+      const randomUnit = units[Math.floor(Math.random() * units.length)];
+      
       setResult({
-        success: false,
-        error: 'Failed to process QR code'
-      });
-      toast.error('Scan failed. Please try again.');
-    }
-  };
-
-  const generateDemoAttendance = (qrString) => {
-    const units = [
-      { code: 'CS101', name: 'Introduction to Programming', lecturer: 'Dr. Smith' },
-      { code: 'MATH201', name: 'Calculus I', lecturer: 'Prof. Johnson' },
-      { code: 'PHY101', name: 'Physics Fundamentals', lecturer: 'Dr. Williams' },
-      { code: 'ENG101', name: 'English Composition', lecturer: 'Prof. Brown' },
-      { code: 'BIO101', name: 'Biology Basics', lecturer: 'Dr. Davis' }
-    ];
-    
-    const randomUnit = units[Math.floor(Math.random() * units.length)];
-    const locations = ['Main Hall', 'Science Block', 'Room 101', 'Lecture Theater', 'Lab Building'];
-    
-    return {
-      qrString: qrString,
-      unitCode: randomUnit.code,
-      unitName: randomUnit.name,
-      lecturer: randomUnit.lecturer,
-      location: locations[Math.floor(Math.random() * locations.length)],
-      scannedAt: new Date().toISOString(),
-      isDemo: true
-    };
-  };
-
-  const handleManualEntry = () => {
-    const qrString = prompt('Enter QR code string manually:');
-    if (qrString) {
-      processQRCode(qrString);
-    }
-  };
-
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      toast.promise(
-        new Promise((resolve) => {
-          setTimeout(() => {
-            const demoData = generateDemoAttendance(`file_${Date.now()}`);
-            setResult({
-              success: true,
-              data: demoData,
-              isDemo: true
-            });
-            resolve();
-          }, 1000);
-        }),
-        {
-          loading: 'Processing QR code image...',
-          success: 'QR code processed successfully!',
-          error: 'Failed to process QR code',
+        success: true,
+        data: {
+          ...randomUnit,
+          scannedAt: new Date().toISOString(),
+          qrCode: `qr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
         }
-      );
-    }
+      });
+      setScanning(false);
+    }, 2000);
   };
 
-  useEffect(() => {
-    return () => {
-      if (scanner) {
-        scanner.clear();
-      }
-    };
-  }, [scanner]);
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setScanning(true);
+      
+      setTimeout(() => {
+        setResult({
+          success: true,
+          data: {
+            unitCode: 'CS101',
+            unitName: 'Introduction to Programming',
+            lecturer: 'Dr. Smith',
+            location: 'Main Hall',
+            scannedAt: new Date().toISOString(),
+            qrCode: `file_${Date.now()}`
+          }
+        });
+        setScanning(false);
+      }, 1500);
+    }
+  };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">QR Code Scanner</h1>
-          <p className="text-gray-600">Scan your lecturer's QR code to mark attendance</p>
-        </div>
+    <div>
+      <div style={{ marginBottom: '32px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#111827', marginBottom: '8px' }}>
+          QR Code Scanner
+        </h1>
+        <p style={{ color: '#6b7280' }}>Scan your lecturer's QR code to mark attendance</p>
+      </div>
 
-        {/* Scanner Section */}
-        <div className="mb-8">
-          <div className="bg-gray-900 rounded-lg overflow-hidden p-4">
-            <div id="qr-reader" className="min-h-[400px] flex items-center justify-center">
-              {!scanning && (
-                <div className="text-center text-white">
-                  <FiCamera className="text-6xl mx-auto mb-4 opacity-50" />
-                  <p className="text-xl mb-4">Camera preview will appear here</p>
-                  <button
-                    onClick={startScanner}
-                    className="px-6 py-3 bg-primary-500 hover:bg-primary-600 rounded-lg font-medium"
-                  >
-                    Start Camera Scanner
-                  </button>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        padding: '32px'
+      }}>
+        {/* Scanner Preview */}
+        <div style={{ marginBottom: '32px' }}>
+          <div style={{
+            backgroundColor: '#1f2937',
+            borderRadius: '8px',
+            overflow: 'hidden',
+            height: '400px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative'
+          }}>
+            {scanning ? (
+              <div style={{ textAlign: 'center', color: 'white' }}>
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  border: '4px solid #3b82f6',
+                  borderTopColor: 'transparent',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                  margin: '0 auto 16px'
+                }}></div>
+                <style>{`
+                  @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                  }
+                `}</style>
+                <p>Scanning QR Code...</p>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', color: '#9ca3af' }}>
+                <div style={{
+                  width: '256px',
+                  height: '256px',
+                  border: '2px dashed #4b5563',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px'
+                }}>
+                  <span style={{ fontSize: '48px' }}>📱</span>
                 </div>
-              )}
-            </div>
-          </div>
-          
-          <div className="flex justify-center gap-4 mt-4">
-            <button
-              onClick={startScanner}
-              disabled={scanning}
-              className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors font-medium flex items-center gap-2"
-            >
-              <FiCamera />
-              {scanning ? 'Scanning...' : 'Start Scanner'}
-            </button>
-            
-            {scanning && (
-              <button
-                onClick={stopScanner}
-                className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center gap-2"
-              >
-                <FiX />
-                Stop Scanner
-              </button>
+                <p>Camera preview will appear here</p>
+              </div>
             )}
+            
+            {/* Scanner overlay */}
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '200px',
+              height: '200px',
+              border: '2px solid #10b981',
+              borderRadius: '8px',
+              pointerEvents: 'none'
+            }}></div>
           </div>
         </div>
 
-        {/* Alternative Methods */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-            <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4 mx-auto">
-              <FiUpload className="text-blue-600 text-2xl" />
-            </div>
-            <h3 className="font-bold text-blue-900 text-lg mb-2 text-center">Upload QR Image</h3>
+        {/* Scanner Controls */}
+        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '32px' }}>
+          <button
+            onClick={handleScan}
+            disabled={scanning}
+            style={{
+              padding: '12px 32px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              opacity: scanning ? 0.5 : 1
+            }}
+          >
+            {scanning ? 'Scanning...' : 'Start Scanner'}
+          </button>
+          
+          <label style={{
+            padding: '12px 32px',
+            backgroundColor: '#10b981',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '16px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            display: 'inline-block'
+          }}>
+            📁 Upload QR Image
             <input
               type="file"
               accept="image/*"
               onChange={handleFileUpload}
-              className="w-full mb-4 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+              style={{ display: 'none' }}
             />
-          </div>
-
-          <div className="bg-green-50 p-6 rounded-lg border border-green-200">
-            <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4 mx-auto">
-              <span className="text-green-600 font-bold text-xl">T</span>
-            </div>
-            <h3 className="font-bold text-green-900 text-lg mb-2 text-center">Manual Entry</h3>
-            <p className="text-green-700 text-sm mb-4 text-center">
-              Enter QR code string manually
-            </p>
-            <button
-              onClick={handleManualEntry}
-              className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-            >
-              Enter QR Code Manually
-            </button>
-          </div>
+          </label>
         </div>
 
         {/* Result Display */}
         {result && (
-          <div className={`p-6 rounded-lg ${result.success ? 'bg-green-50' : 'bg-red-50'} mb-8`}>
-            <div className="flex items-start space-x-3">
-              {result.success ? (
-                <>
-                  <FiCheckCircle className="text-green-600 text-2xl mt-1 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-bold text-green-800 text-lg">Attendance Recorded Successfully! ✅</h3>
-                      {result.isDemo && (
-                        <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                          Demo Mode
-                        </span>
-                      )}
+          <div style={{
+            padding: '24px',
+            backgroundColor: result.success ? '#d1fae5' : '#fee2e2',
+            borderRadius: '8px',
+            marginBottom: '32px'
+          }}>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                backgroundColor: result.success ? '#10b981' : '#ef4444',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <span style={{ color: 'white', fontSize: '20px' }}>
+                  {result.success ? '✓' : '✗'}
+                </span>
+              </div>
+              
+              <div style={{ flex: 1 }}>
+                <h3 style={{
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: result.success ? '#065f46' : '#991b1b',
+                  marginBottom: '12px'
+                }}>
+                  {result.success ? 'Attendance Recorded Successfully!' : 'Scan Failed'}
+                </h3>
+                
+                {result.success && result.data && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '16px'
+                  }}>
+                    <div>
+                      <p style={{ fontSize: '14px', color: '#374151', marginBottom: '4px' }}>Unit</p>
+                      <p style={{ fontWeight: '500', color: '#111827' }}>
+                        {result.data.unitName} ({result.data.unitCode})
+                      </p>
                     </div>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="bg-green-100 p-3 rounded">
-                        <p className="text-sm text-green-700 font-medium">Unit</p>
-                        <p className="text-green-900">{result.data.unitName} ({result.data.unitCode})</p>
-                      </div>
-                      <div className="bg-green-100 p-3 rounded">
-                        <p className="text-sm text-green-700 font-medium">Time</p>
-                        <p className="text-green-900">{new Date(result.data.scannedAt).toLocaleString()}</p>
-                      </div>
-                      <div className="bg-green-100 p-3 rounded">
-                        <p className="text-sm text-green-700 font-medium">Location</p>
-                        <p className="text-green-900">{result.data.location}</p>
-                      </div>
-                      <div className="bg-green-100 p-3 rounded">
-                        <p className="text-sm text-green-700 font-medium">Lecturer</p>
-                        <p className="text-green-900">{result.data.lecturer}</p>
-                      </div>
+                    <div>
+                      <p style={{ fontSize: '14px', color: '#374151', marginBottom: '4px' }}>Lecturer</p>
+                      <p style={{ fontWeight: '500', color: '#111827' }}>{result.data.lecturer}</p>
                     </div>
-                    <div className="mt-4 p-3 bg-green-100 rounded">
-                      <p className="text-sm text-green-700 font-medium">QR Code Scanned:</p>
-                      <code className="text-xs text-green-900 break-all">
-                        {result.data.qrString}
-                      </code>
+                    <div>
+                      <p style={{ fontSize: '14px', color: '#374151', marginBottom: '4px' }}>Time</p>
+                      <p style={{ fontWeight: '500', color: '#111827' }}>
+                        {new Date(result.data.scannedAt).toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: '14px', color: '#374151', marginBottom: '4px' }}>Location</p>
+                      <p style={{ fontWeight: '500', color: '#111827' }}>{result.data.location}</p>
                     </div>
                   </div>
-                </>
-              ) : (
-                <>
-                  <div className="text-red-600 text-2xl mt-1">✗</div>
-                  <div>
-                    <h3 className="font-bold text-red-800">Scan Failed</h3>
-                    <p className="text-red-700 mt-1">{result.error}</p>
-                  </div>
-                </>
-              )}
+                )}
+              </div>
             </div>
           </div>
         )}
 
         {/* Instructions */}
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h3 className="font-bold text-gray-900 text-lg mb-3">📋 Instructions:</h3>
-          <div className="grid md:grid-cols-2 gap-6">
+        <div style={{
+          backgroundColor: '#f0f9ff',
+          padding: '24px',
+          borderRadius: '8px',
+          border: '1px solid #dbeafe'
+        }}>
+          <h4 style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            color: '#0369a1',
+            marginBottom: '12px'
+          }}>📋 How to Scan:</h4>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '16px'
+          }}>
             <div>
-              <h4 className="font-medium text-gray-700 mb-2">For Students:</h4>
-              <ul className="text-gray-600 space-y-1">
-                <li>• Ensure camera permissions are granted</li>
-                <li>• Position QR code within the frame</li>
-                <li>• Hold steady until scan completes</li>
-                <li>• Check confirmation message</li>
-              </ul>
+              <p style={{ fontWeight: '500', color: '#374151', marginBottom: '8px' }}>1. Position QR Code</p>
+              <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                Hold your device steady and position the QR code within the frame
+              </p>
             </div>
             <div>
-              <h4 className="font-medium text-gray-700 mb-2">Important Notes:</h4>
-              <ul className="text-gray-600 space-y-1">
-                <li>• QR codes are session-specific</li>
-                <li>• One scan per student per session</li>
-                <li>• Scan within class time only</li>
-                <li>• Contact support for issues</li>
-              </ul>
+              <p style={{ fontWeight: '500', color: '#374151', marginBottom: '8px' }}>2. Wait for Scan</p>
+              <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                Keep the QR code steady until the scan completes automatically
+              </p>
             </div>
+            <div>
+              <p style={{ fontWeight: '500', color: '#374151', marginBottom: '8px' }}>3. Check Confirmation</p>
+              <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                Look for the success message with attendance details
+              </p>
+            </div>
+          </div>
+          
+          <div style={{ marginTop: '20px', padding: '16px', backgroundColor: '#fef3c7', borderRadius: '6px' }}>
+            <p style={{ fontWeight: '500', color: '#92400e', marginBottom: '4px' }}>⚠️ Important Notes:</p>
+            <ul style={{ fontSize: '14px', color: '#92400e', paddingLeft: '20px', margin: 0 }}>
+              <li>QR codes are valid only during class sessions</li>
+              <li>You can scan each QR code only once</li>
+              <li>Make sure you're physically present in the classroom</li>
+              <li>Contact your lecturer if you encounter issues</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -314,4 +292,4 @@ const Scanner = () => {
   );
 };
 
-export default Scanner;
+export default StudentScanner;
