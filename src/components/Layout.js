@@ -1,16 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, useNavigate, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiLogOut, FiMenu, FiX } from 'react-icons/fi';
-import { 
-  MdDashboard, 
-  MdPerson, 
-  MdQrCodeScanner, 
-  MdQrCode,
-  MdGroup,
-  MdAnalytics 
-} from 'react-icons/md';
-import { useState } from 'react';
 
 const Layout = ({ role }) => {
   const { logout, user } = useAuth();
@@ -24,82 +14,108 @@ const Layout = ({ role }) => {
 
   const navigation = {
     student: [
-      { name: 'Dashboard', path: 'dashboard', icon: <MdDashboard /> },
-      { name: 'Profile', path: 'profile', icon: <MdPerson /> },
-      { name: 'Scan QR', path: 'scanner', icon: <MdQrCodeScanner /> },
+      { name: 'Dashboard', path: 'dashboard' },
+      { name: 'Profile', path: 'profile' },
+      { name: 'Scan QR', path: 'scanner' },
     ],
     lecturer: [
-      { name: 'Dashboard', path: 'dashboard', icon: <MdDashboard /> },
-      { name: 'Generate QR', path: 'generate-qr', icon: <MdQrCode /> },
+      { name: 'Dashboard', path: 'dashboard' },
+      { name: 'Generate QR', path: 'generate-qr' },
     ],
     admin: [
-      { name: 'Dashboard', path: 'dashboard', icon: <MdDashboard /> },
-      { name: 'Manage Users', path: 'users', icon: <MdGroup /> },
-      { name: 'Analytics', path: 'analytics', icon: <MdAnalytics /> },
+      { name: 'Dashboard', path: 'dashboard' },
     ]
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
       {/* Mobile sidebar toggle */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
+      <div style={{ position: 'fixed', top: '16px', left: '16px', zIndex: 50 }}>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-md bg-white shadow-md"
+          style={{
+            padding: '8px',
+            borderRadius: '6px',
+            backgroundColor: 'white',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            border: 'none',
+            cursor: 'pointer'
+          }}
         >
-          {sidebarOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+          {sidebarOpen ? '✕' : '☰'}
         </button>
       </div>
 
       {/* Sidebar */}
-      <div className={`
-        fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
-      `}>
-        <div className="flex flex-col h-full">
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        bottom: 0,
+        width: '256px',
+        backgroundColor: 'white',
+        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.2s ease-in-out',
+        zIndex: 40
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           {/* Logo */}
-          <div className="p-6 border-b">
-            <h1 className="text-2xl font-bold text-primary-600">IN System</h1>
-            <p className="text-sm text-gray-600">Attendance Management</p>
+          <div style={{ padding: '24px', borderBottom: '1px solid #e5e7eb' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6', margin: 0 }}>
+              IN System
+            </h1>
+            <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>
+              Attendance Management
+            </p>
           </div>
 
           {/* User Info */}
-          <div className="p-4 border-b">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-                <span className="text-primary-600 font-bold">
+          <div style={{ padding: '16px', borderBottom: '1px solid #e5e7eb' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                backgroundColor: '#dbeafe',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <span style={{ color: '#3b82f6', fontWeight: 'bold' }}>
                   {user?.name?.charAt(0) || 'U'}
                 </span>
               </div>
               <div>
-                <p className="font-medium">{user?.name}</p>
-                <p className="text-sm text-gray-500 capitalize">{role}</p>
-                {user?.admissionNumber && (
-                  <p className="text-xs text-gray-400">{user.admissionNumber}</p>
-                )}
+                <p style={{ fontWeight: '500', margin: 0 }}>{user?.name}</p>
+                <p style={{ fontSize: '14px', color: '#6b7280', margin: 0, textTransform: 'capitalize' }}>
+                  {role}
+                </p>
               </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4">
-            <ul className="space-y-2">
+          <nav style={{ flex: 1, padding: '16px' }}>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {navigation[role]?.map((item) => (
-                <li key={item.path}>
+                <li key={item.path} style={{ marginBottom: '8px' }}>
                   <NavLink
                     to={item.path}
                     end
-                    className={({ isActive }) => `
-                      flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors
-                      ${isActive 
-                        ? 'bg-primary-50 text-primary-600' 
-                        : 'text-gray-700 hover:bg-gray-100'
-                      }
-                    `}
+                    style={({ isActive }) => ({
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '12px 16px',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      color: isActive ? '#3b82f6' : '#374151',
+                      backgroundColor: isActive ? '#eff6ff' : 'transparent',
+                      fontWeight: isActive ? '500' : '400'
+                    })}
                     onClick={() => setSidebarOpen(false)}
                   >
-                    <span className="text-xl">{item.icon}</span>
-                    <span>{item.name}</span>
+                    {item.name}
                   </NavLink>
                 </li>
               ))}
@@ -107,12 +123,23 @@ const Layout = ({ role }) => {
           </nav>
 
           {/* Logout Button */}
-          <div className="p-4 border-t">
+          <div style={{ padding: '16px', borderTop: '1px solid #e5e7eb' }}>
             <button
               onClick={handleLogout}
-              className="flex items-center space-x-3 px-4 py-3 w-full text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 16px',
+                width: '100%',
+                color: '#dc2626',
+                backgroundColor: 'transparent',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '500'
+              }}
             >
-              <FiLogOut />
               <span>Logout</span>
             </button>
           </div>
@@ -120,8 +147,8 @@ const Layout = ({ role }) => {
       </div>
 
       {/* Main Content */}
-      <div className="lg:ml-64 min-h-screen">
-        <main className="p-4 lg:p-6">
+      <div style={{ marginLeft: '0', minHeight: '100vh' }}>
+        <main style={{ padding: '16px', paddingTop: '80px' }}>
           <Outlet />
         </main>
       </div>
