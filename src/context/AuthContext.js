@@ -1,9 +1,8 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
-import toast from 'react-hot-toast';
 
 // Set base URL for axios
-axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'https://attendance-system-backend.onrender.com';
+axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'https://init-2.onrender.com';
 
 const AuthContext = createContext({});
 
@@ -17,30 +16,18 @@ export const AuthProvider = ({ children }) => {
     checkLoggedIn();
   }, []);
 
-  const checkLoggedIn = async () => {
+  const checkLoggedIn = () => {
     const token = localStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    const savedUser = localStorage.getItem('user');
+    
+    if (token && savedUser) {
       try {
-        // For demo, create mock user if API fails
-        const demoUser = {
-          id: '1',
-          name: 'Demo User',
-          email: 'demo@example.com',
-          role: 'student',
-          admissionNumber: 'ST001'
-        };
-        setUser(demoUser);
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       } catch (error) {
-        // Use demo user if API fails
-        const demoUser = {
-          id: '1',
-          name: 'Demo User',
-          email: 'demo@example.com',
-          role: 'student',
-          admissionNumber: 'ST001'
-        };
-        setUser(demoUser);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
       }
     }
     setLoading(false);
@@ -48,76 +35,68 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('/api/auth/login', { email, password });
-      const { token, user } = response.data;
-      
-      localStorage.setItem('token', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(user);
-      
-      toast.success('Login successful!');
-      return { success: true, role: user.role };
-    } catch (error) {
-      // Demo login for testing
+      // Demo login for now
       const demoUsers = {
-        'student@example.com': { role: 'student', name: 'John Student' },
-        'lecturer@example.com': { role: 'lecturer', name: 'Dr. Lecturer' },
-        'admin@example.com': { role: 'admin', name: 'Admin User' }
+        'student@example.com': { 
+          role: 'student', 
+          name: 'John Student',
+          admissionNumber: 'ST001',
+          email: 'student@example.com'
+        },
+        'lecturer@example.com': { 
+          role: 'lecturer', 
+          name: 'Dr. Lecturer',
+          email: 'lecturer@example.com'
+        },
+        'admin@example.com': { 
+          role: 'admin', 
+          name: 'Admin User',
+          email: 'admin@example.com'
+        }
       };
       
       if (demoUsers[email] && password === 'password123') {
-        const demoUser = {
-          id: '1',
-          name: demoUsers[email].name,
-          email: email,
-          role: demoUsers[email].role,
-          admissionNumber: email === 'student@example.com' ? 'ST001' : null
-        };
+        const userData = demoUsers[email];
+        const token = 'demo-token-' + Date.now();
         
-        localStorage.setItem('token', 'demo-token-' + Date.now());
-        setUser(demoUser);
-        toast.success('Demo login successful!');
-        return { success: true, role: demoUser.role };
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(userData));
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        setUser(userData);
+        
+        return { success: true, role: userData.role };
       }
       
-      toast.error('Invalid credentials. Try: student@example.com / password123');
-      return { success: false };
+      return { success: false, error: 'Invalid credentials' };
+    } catch (error) {
+      return { success: false, error: error.message };
     }
   };
 
   const register = async (userData) => {
     try {
-      const response = await axios.post('/api/auth/register', userData);
-      const { token, user } = response.data;
-      
-      localStorage.setItem('token', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(user);
-      
-      toast.success('Registration successful!');
-      return { success: true, role: user.role };
-    } catch (error) {
-      // Demo registration
-      const demoUser = {
-        id: '1',
-        name: userData.name,
-        email: userData.email,
-        role: userData.role,
-        admissionNumber: userData.admissionNumber
+      const token = 'demo-token-' + Date.now();
+      const newUser = {
+        ...userData,
+        id: 'user-' + Date.now()
       };
       
-      localStorage.setItem('token', 'demo-token-' + Date.now());
-      setUser(demoUser);
-      toast.success('Demo registration successful!');
-      return { success: true, role: userData.role };
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(newUser));
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setUser(newUser);
+      
+      return { success: true, role: newUser.role };
+    } catch (error) {
+      return { success: false, error: error.message };
     }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
-    toast.success('Logged out successfully');
   };
 
   return (
