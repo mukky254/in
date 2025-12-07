@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
-import toast from 'react-hot-toast';
-import { FiCopy, FiPrinter, FiDownload } from 'react-icons/fi';
-import moment from 'moment';
 
-const QRGenerator = () => {
+const LecturerQRGenerator = () => {
   const [formData, setFormData] = useState({
     unitCode: 'CS101',
     unitName: 'Introduction to Programming',
-    duration: 30,
+    duration: '30',
     location: 'Main Hall, Room 101',
-    session: 'Morning',
+    session: 'Morning'
   });
   
   const [qrData, setQrData] = useState(null);
@@ -24,347 +20,429 @@ const QRGenerator = () => {
   };
 
   const generateQR = () => {
-    if (!formData.unitCode || !formData.unitName) {
-      toast.error('Please fill in unit details');
-      return;
-    }
-
     setGenerating(true);
     
-    // Simulate API call
+    // Simulate QR generation
     setTimeout(() => {
-      const qrString = `qr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const expiresAt = new Date(Date.now() + formData.duration * 60000);
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + (parseInt(formData.duration) * 60000));
       
       const qrInfo = {
         id: `qr_${Date.now()}`,
-        qrString,
-        expiresAt,
+        qrString: `IN_${formData.unitCode}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        expiresAt: expiresAt.toISOString(),
         ...formData,
-        createdAt: new Date().toISOString(),
+        createdAt: now.toISOString(),
         lecturer: 'Dr. John Smith'
       };
       
       setQrData(qrInfo);
       setGenerating(false);
-      toast.success('QR Code generated successfully!');
-    }, 500);
+    }, 1000);
   };
 
   const copyToClipboard = () => {
     if (qrData) {
       navigator.clipboard.writeText(qrData.qrString);
-      toast.success('QR Code copied to clipboard!');
+      alert('QR Code copied to clipboard!');
     }
   };
 
   const printQR = () => {
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
-        <head>
-          <title>QR Code - ${qrData.unitCode}</title>
-          <style>
-            body { 
-              font-family: Arial, sans-serif; 
-              text-align: center; 
-              padding: 40px;
-              max-width: 800px;
-              margin: 0 auto;
-            }
-            .header { 
-              margin-bottom: 30px;
-              border-bottom: 2px solid #333;
-              padding-bottom: 20px;
-            }
-            .qr-container { 
-              margin: 30px auto;
-              padding: 20px;
-              border: 2px dashed #ccc;
-              display: inline-block;
-            }
-            .info { 
-              margin: 20px 0;
-              text-align: left;
-              display: inline-block;
-            }
-            .info-row { 
-              margin: 8px 0;
-              display: flex;
-            }
-            .label { 
-              font-weight: bold;
-              min-width: 150px;
-            }
-            @media print {
-              .no-print { display: none; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>IN Attendance System</h1>
-            <h2>Attendance QR Code</h2>
+      <head>
+        <title>QR Code - ${qrData.unitCode}</title>
+        <style>
+          body { font-family: Arial, sans-serif; text-align: center; padding: 40px; }
+          .qr-code { margin: 20px auto; width: 300px; height: 300px; }
+          .info { margin: 20px 0; text-align: left; display: inline-block; }
+          .info-item { margin: 8px 0; }
+          .label { font-weight: bold; display: inline-block; width: 120px; }
+        </style>
+      </head>
+      <body>
+        <h1>IN Attendance System</h1>
+        <h2>Attendance QR Code</h2>
+        
+        <div class="qr-code">
+          <svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 100 100">
+            <!-- QR Code Background -->
+            <rect width="100" height="100" fill="white"/>
+            <!-- QR Code Pattern -->
+            <rect x="20" y="20" width="60" height="60" fill="black"/>
+            <rect x="25" y="25" width="50" height="50" fill="white"/>
+            <rect x="30" y="30" width="40" height="40" fill="black"/>
+            <!-- QR Code Text -->
+            <text x="50" y="85" text-anchor="middle" font-size="8">${qrData.unitCode}</text>
+          </svg>
+        </div>
+        
+        <div class="info">
+          <div class="info-item">
+            <span class="label">Unit Code:</span>
+            <span>${qrData.unitCode}</span>
           </div>
-          
-          <div class="qr-container">
-            <div id="qrcode"></div>
+          <div class="info-item">
+            <span class="label">Unit Name:</span>
+            <span>${qrData.unitName}</span>
           </div>
-          
-          <div class="info">
-            <div class="info-row">
-              <span class="label">Unit Code:</span>
-              <span>${qrData.unitCode}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Unit Name:</span>
-              <span>${qrData.unitName}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Lecturer:</span>
-              <span>${qrData.lecturer}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Session:</span>
-              <span>${qrData.session}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Location:</span>
-              <span>${qrData.location}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Valid Until:</span>
-              <span>${moment(qrData.expiresAt).format('MMMM Do YYYY, h:mm:ss a')}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Generated:</span>
-              <span>${moment(qrData.createdAt).format('MMMM Do YYYY, h:mm:ss a')}</span>
-            </div>
+          <div class="info-item">
+            <span class="label">Lecturer:</span>
+            <span>${qrData.lecturer}</span>
           </div>
-          
-          <div style="margin-top: 40px; color: #666; font-size: 14px;">
-            <p>Instructions for students:</p>
-            <p>1. Open IN Attendance System app</p>
-            <p>2. Go to Scan QR section</p>
-            <p>3. Point camera at this code</p>
-            <p>4. Wait for confirmation message</p>
+          <div class="info-item">
+            <span class="label">Session:</span>
+            <span>${qrData.session}</span>
           </div>
-          
-          <script>
-            // Generate QR code
-            const qrcode = new QRCode(document.getElementById("qrcode"), {
-              text: "${qrData.qrString}",
-              width: 256,
-              height: 256
-            });
-            
-            window.onload = function() {
-              window.print();
-            }
-          </script>
-        </body>
+          <div class="info-item">
+            <span class="label">Location:</span>
+            <span>${qrData.location}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Valid Until:</span>
+            <span>${new Date(qrData.expiresAt).toLocaleString()}</span>
+          </div>
+        </div>
+        
+        <p style="margin-top: 30px; color: #666;">
+          Scan this code using the IN Attendance System app to mark attendance
+        </p>
+      </body>
       </html>
     `);
     printWindow.document.close();
-  };
-
-  const downloadQR = () => {
-    if (!qrData) return;
-    
-    const canvas = document.querySelector('canvas');
-    if (canvas) {
-      const link = document.createElement('a');
-      link.download = `qr_${qrData.unitCode}_${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-      toast.success('QR Code downloaded!');
-    }
+    printWindow.print();
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Generate QR Code</h1>
-          <p className="text-gray-600">Create QR codes for student attendance marking</p>
-        </div>
+    <div>
+      <div style={{ marginBottom: '32px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#111827', marginBottom: '8px' }}>
+          Generate QR Code
+        </h1>
+        <p style={{ color: '#6b7280' }}>Create QR codes for student attendance marking</p>
+      </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        padding: '32px'
+      }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
           {/* Form Section */}
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Unit Code *
-              </label>
-              <input
-                type="text"
-                name="unitCode"
-                value={formData.unitCode}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="e.g., CS101"
-                required
-              />
-            </div>
+          <div>
+            <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '24px' }}>
+              QR Code Details
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                  Unit Code *
+                </label>
+                <input
+                  type="text"
+                  name="unitCode"
+                  value={formData.unitCode}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '16px'
+                  }}
+                  placeholder="e.g., CS101"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Unit Name *
-              </label>
-              <input
-                type="text"
-                name="unitName"
-                value={formData.unitName}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="e.g., Introduction to Programming"
-                required
-              />
-            </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                  Unit Name *
+                </label>
+                <input
+                  type="text"
+                  name="unitName"
+                  value={formData.unitName}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '16px'
+                  }}
+                  placeholder="e.g., Introduction to Programming"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Duration (minutes) *
-              </label>
-              <select
-                name="duration"
-                value={formData.duration}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                  Duration (minutes) *
+                </label>
+                <select
+                  name="duration"
+                  value={formData.duration}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '16px'
+                  }}
+                >
+                  <option value="15">15 minutes</option>
+                  <option value="30">30 minutes</option>
+                  <option value="45">45 minutes</option>
+                  <option value="60">60 minutes</option>
+                  <option value="120">2 hours</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                  Location
+                </label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '16px'
+                  }}
+                  placeholder="e.g., Main Hall, Room 101"
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                  Session
+                </label>
+                <select
+                  name="session"
+                  value={formData.session}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '16px'
+                  }}
+                >
+                  <option value="Morning">Morning</option>
+                  <option value="Afternoon">Afternoon</option>
+                  <option value="Evening">Evening</option>
+                  <option value="Weekend">Weekend</option>
+                </select>
+              </div>
+
+              <button
+                onClick={generateQR}
+                disabled={generating}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  marginTop: '8px',
+                  opacity: generating ? 0.5 : 1
+                }}
               >
-                <option value="15">15 minutes</option>
-                <option value="30">30 minutes</option>
-                <option value="45">45 minutes</option>
-                <option value="60">60 minutes</option>
-                <option value="120">2 hours</option>
-              </select>
+                {generating ? 'Generating QR Code...' : 'Generate QR Code'}
+              </button>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Location
-              </label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="e.g., Main Hall, Room 101"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Session
-              </label>
-              <select
-                name="session"
-                value={formData.session}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="Morning">Morning</option>
-                <option value="Afternoon">Afternoon</option>
-                <option value="Evening">Evening</option>
-                <option value="Weekend">Weekend</option>
-              </select>
-            </div>
-
-            <button
-              onClick={generateQR}
-              disabled={generating}
-              className="w-full py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors font-medium"
-            >
-              {generating ? 'Generating QR Code...' : 'Generate QR Code'}
-            </button>
           </div>
 
           {/* QR Display Section */}
           <div>
+            <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '24px' }}>
+              Generated QR Code
+            </h2>
+            
             {qrData ? (
-              <div className="bg-gray-50 p-6 rounded-xl">
-                <div className="text-center mb-6">
-                  <h3 className="text-xl font-bold text-gray-900">Generated QR Code</h3>
-                  <p className="text-gray-600">Display this for students to scan</p>
+              <div style={{
+                backgroundColor: '#f9fafb',
+                padding: '32px',
+                borderRadius: '12px',
+                border: '1px solid #e5e7eb'
+              }}>
+                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                  <div style={{
+                    width: '200px',
+                    height: '200px',
+                    backgroundColor: 'white',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto'
+                  }}>
+                    <div style={{
+                      width: '160px',
+                      height: '160px',
+                      backgroundColor: 'black',
+                      borderRadius: '4px',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}>
+                      {/* QR Code Pattern */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '20px',
+                        left: '20px',
+                        right: '20px',
+                        bottom: '20px',
+                        backgroundColor: 'white',
+                        borderRadius: '2px'
+                      }}></div>
+                      <div style={{
+                        position: 'absolute',
+                        top: '40px',
+                        left: '40px',
+                        right: '40px',
+                        bottom: '40px',
+                        backgroundColor: 'black',
+                        borderRadius: '2px'
+                      }}></div>
+                      <div style={{
+                        position: 'absolute',
+                        top: '60px',
+                        left: '60px',
+                        right: '60px',
+                        bottom: '60px',
+                        backgroundColor: 'white',
+                        borderRadius: '2px'
+                      }}></div>
+                    </div>
+                  </div>
+                  <p style={{ marginTop: '12px', fontSize: '12px', color: '#6b7280' }}>
+                    Scan this code using the IN Attendance System app
+                  </p>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow-sm mb-6 flex flex-col items-center">
-                  <div className="mb-4">
-                    <QRCodeSVG 
-                      value={qrData.qrString} 
-                      size={256}
-                      level="H"
-                      includeMargin={true}
-                    />
-                  </div>
-                  
-                  <div className="w-full max-w-md space-y-3 mb-6">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Unit:</span>
-                      <span className="font-medium">{qrData.unitName} ({qrData.unitCode})</span>
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{
+                    backgroundColor: 'white',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div style={{ display: 'grid', gap: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '14px', color: '#6b7280' }}>Unit:</span>
+                        <span style={{ fontWeight: '500' }}>{qrData.unitName} ({qrData.unitCode})</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '14px', color: '#6b7280' }}>Valid Until:</span>
+                        <span style={{ fontWeight: '500' }}>
+                          {new Date(qrData.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '14px', color: '#6b7280' }}>Location:</span>
+                        <span style={{ fontWeight: '500' }}>{qrData.location}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '14px', color: '#6b7280' }}>Session:</span>
+                        <span style={{ fontWeight: '500' }}>{qrData.session}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Valid Until:</span>
-                      <span className="font-medium">{moment(qrData.expiresAt).format('h:mm A')}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Location:</span>
-                      <span className="font-medium">{qrData.location}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Session:</span>
-                      <span className="font-medium">{qrData.session}</span>
-                    </div>
-                    <div className="mt-4 p-3 bg-gray-100 rounded">
-                      <p className="text-sm text-gray-600 mb-1">QR Code String:</p>
-                      <code className="text-xs break-all">{qrData.qrString}</code>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 flex-wrap justify-center">
-                    <button
-                      onClick={copyToClipboard}
-                      className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium flex items-center gap-2"
-                    >
-                      <FiCopy />
-                      Copy Code
-                    </button>
-                    <button
-                      onClick={printQR}
-                      className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors font-medium flex items-center gap-2"
-                    >
-                      <FiPrinter />
-                      Print
-                    </button>
-                    <button
-                      onClick={downloadQR}
-                      className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors font-medium flex items-center gap-2"
-                    >
-                      <FiDownload />
-                      Download
-                    </button>
                   </div>
                 </div>
 
-                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                  <h4 className="font-medium text-yellow-800 mb-2">📋 Instructions:</h4>
-                  <ul className="text-yellow-700 text-sm space-y-1">
-                    <li>• Display this QR code at the beginning of class</li>
-                    <li>• Ensure it's visible to all students</li>
-                    <li>• QR code expires in {formData.duration} minutes</li>
-                    <li>• Generate a new code for each session</li>
-                    <li>• Track attendance in your dashboard</li>
-                  </ul>
+                <div style={{
+                  backgroundColor: 'white',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb',
+                  marginBottom: '20px'
+                }}>
+                  <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>QR Code String:</p>
+                  <code style={{
+                    fontSize: '11px',
+                    color: '#374151',
+                    wordBreak: 'break-all',
+                    display: 'block'
+                  }}>
+                    {qrData.qrString}
+                  </code>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={copyToClipboard}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Copy Code
+                  </button>
+                  <button
+                    onClick={printQR}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      backgroundColor: '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Print QR
+                  </button>
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-50 p-12 rounded-xl flex flex-col items-center justify-center h-full">
-                <div className="w-24 h-24 border-4 border-dashed border-gray-300 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-gray-400 text-4xl">QR</span>
+              <div style={{
+                backgroundColor: '#f9fafb',
+                padding: '80px 32px',
+                borderRadius: '12px',
+                border: '2px dashed #d1d5db',
+                textAlign: 'center'
+              }}>
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  border: '2px dashed #9ca3af',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px'
+                }}>
+                  <span style={{ fontSize: '32px', color: '#9ca3af' }}>QR</span>
                 </div>
-                <p className="text-gray-500 text-center">
-                  No QR code generated yet. <br />
+                <p style={{ color: '#6b7280' }}>
+                  No QR code generated yet.
+                  <br />
                   Fill the form and click "Generate QR Code"
                 </p>
               </div>
@@ -372,27 +450,35 @@ const QRGenerator = () => {
           </div>
         </div>
 
-        {/* Recent QR Codes */}
-        <div className="mt-8">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Recently Generated Codes</h3>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-gray-600 text-center">
-              QR code history will appear here once you start generating codes
-            </p>
-            <div className="mt-4 grid gap-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white p-3 rounded-lg border border-gray-200">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <span className="font-medium">CS10{i}</span>
-                      <span className="text-gray-500 text-sm ml-2">- Introduction to Topic {i}</span>
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {moment().subtract(i, 'hours').format('h:mm A')}
-                    </div>
-                  </div>
-                </div>
-              ))}
+        {/* Instructions */}
+        <div style={{
+          marginTop: '32px',
+          padding: '24px',
+          backgroundColor: '#f0f9ff',
+          borderRadius: '8px',
+          border: '1px solid #dbeafe'
+        }}>
+          <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#0369a1', marginBottom: '12px' }}>
+            📋 Instructions for Lecturers:
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+            <div>
+              <p style={{ fontWeight: '500', color: '#374151', marginBottom: '8px' }}>1. Generate QR Code</p>
+              <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                Fill in class details and generate a unique QR code for each session
+              </p>
+            </div>
+            <div>
+              <p style={{ fontWeight: '500', color: '#374151', marginBottom: '8px' }}>2. Display in Class</p>
+              <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                Project or print the QR code for students to scan at the beginning of class
+              </p>
+            </div>
+            <div>
+              <p style={{ fontWeight: '500', color: '#374151', marginBottom: '8px' }}>3. Track Attendance</p>
+              <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                Monitor real-time attendance in your dashboard as students scan
+              </p>
             </div>
           </div>
         </div>
@@ -401,4 +487,4 @@ const QRGenerator = () => {
   );
 };
 
-export default QRGenerator;
+export default LecturerQRGenerator;
